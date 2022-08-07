@@ -100,6 +100,7 @@ if bandera == 1:
     test_dtm = vect.transform(texto_df["clean"]) # use it to extract features from training data
     y_pred_test = model.predict(test_dtm) # make class predictions for test_dtm
     y_pred_proba = model.predict_proba(test_dtm).tolist()
+    prediction =   model.predict_proba(test_dtm)
     resul = np.argmax(y_pred_proba)
     resul = round(y_pred_proba[0][resul]  * 100,2)
     print(resul)
@@ -108,9 +109,12 @@ if bandera == 1:
     # Convertir etiquetas Fake - Real
     texto_df['class'] = pd.Series(y_pred_test).map({1:"Real", 0:"Falso"}) # Fake is 1, Not Fake is 0. 
     
-    if y_pred_test == "0":
+    if prediction[0][0] > 0.7:
         html_str = f"""<h3><span style='color:red'>Esta noticia parece falsa !! con una probabilidad del {resul}% </span></h3>"""
         st.markdown(html_str, unsafe_allow_html=True)
-    else:
+    elif prediction[0][1] > 0.7:
         html_str = f"""<h3><span style='color:green'>Esta noticia parece verdadera !! con una probabilidad del {resul}% </span></h3>"""
+        st.markdown(html_str, unsafe_allow_html=True)
+    else:
+        html_str = f"""<h3><span style='color:green'>No se pudo determinar si es Fake o Real la noticia</span></h3>"""
         st.markdown(html_str, unsafe_allow_html=True)
