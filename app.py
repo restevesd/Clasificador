@@ -5,13 +5,11 @@ import warnings
 warnings.filterwarnings('ignore')
 import numpy as np
 import pandas as pd # pandas para trabajar arhivos CSV
-import time
 
 
 # importar librerías para la extracción de características 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
 
 # pre-procesarmiento de texto
 import string
@@ -31,8 +29,7 @@ wordnet = WordNetLemmatizer()
 regex = re.compile('[%s]' % re.escape(string.punctuation))
 check_model = st.empty()
 
-#Descargar Stopwords en español
-#Palabras habituales que no aportan significado (stop-words)
+#Descargar Stopwords en español y librerías varias
 nltk.download('omw-1.4')
 nltk.download('wordnet')
 nltk.download('punkt')
@@ -40,6 +37,9 @@ nltk.download('stopwords')
 stopword_es = set(nltk.corpus.stopwords.words('spanish'))
 
 #Funciones
+model = pickle.load(open('model.pkl', 'rb'))
+vect = pickle.load(open('carecteristicas.pkl', 'rb'))
+
 
 #Función para eliminar las tildes
 def normalize(s):
@@ -78,23 +78,12 @@ def limpiar_texto(line_from_column):
 pickled_model = pickle.load(open('model.pkl', 'rb'))
 st.title ("Aplicación para detectar posibles Fake News")
 st.header("Por favor ingrese el texto de la noticia para verificar si es falsa o verdadera")
+st.write("Versión Beta, solo para fines educativos")
 
 texto = st.text_area('Noticia', height=300)
-bandera = 0
+
 
 if st.button('Analizar !!!!'):
-    try:
-        model = pickle.load(open('model.pkl', 'rb'))
-        vect = pickle.load(open('carecteristicas.pkl', 'rb'))
-        
-        check_model = st.success("Modelo de clasificación cargado correctamente")
-        time.sleep(1) # Sleep for 3 seconds
-        check_model.empty()
-        bandera = 1
-    except:
-        st.error('No se pudo cargar el modelo de detección')
-
-if bandera == 1:
     texto_df = pd.DataFrame({"texto":texto},index=range(1))
     texto_df['clean'] = texto_df['texto'].apply(limpiar_texto)
     test_dtm = vect.transform(texto_df["clean"]) # use it to extract features from training data
@@ -105,8 +94,7 @@ if bandera == 1:
     resul = round(y_pred_proba[0][resul]  * 100,2)
     print(resul)
 
-    
-    # Convertir etiquetas Fake - Real
+        # Convertir etiquetas Fake - Real
     texto_df['class'] = pd.Series(y_pred_test).map({1:"Real", 0:"Falso"}) # Fake is 1, Not Fake is 0. 
     
     if prediction[0][0] > 0.7:
